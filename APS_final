@@ -1,0 +1,339 @@
+-- Database: UTFPR_reservas
+
+-- DROP DATABASE IF EXISTS "UTFPR_reservas";
+
+CREATE DATABASE "UTFPR_reservas"
+    WITH 
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'Portuguese_Brazil.1252'
+    LC_CTYPE = 'Portuguese_Brazil.1252'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+	
+	
+CREATE TABLE Tabela_horario(
+	id_dia_sala varchar(30) PRIMARY KEY  NOT NULL,
+	constraint dia foreign key (id_dia_sala) references dia,
+	horario_inicio VARCHAR(3)
+	
+);
+drop table Tabela_horario;
+
+
+CREATE TABLE Dia(
+	id_dia varchar (30) PRIMARY KEY  NOT NULL,
+	dias_da_semana varchar(3) NOT NULL
+	
+);
+drop table dia;
+
+
+CREATE TABLE Usuario(
+	Nome VARCHAR(50) NOT NULL,
+	RA DECIMAL(8) NOT NULL,
+	senha varchar(20) Not NULL,
+	Tipo boolean
+
+);
+ALTER TABLE Usuario
+ADD constraint idaluno
+PRIMARY KEY (RA);
+
+
+
+CREATE TABLE Salas(
+	Andar integer NOT NULL,
+	numero DECIMAL NOT NULL,
+	Bloco VARCHAR(1) NOT NULL,
+	Capacidade integer,
+	Infos_extras json,
+	Tipo_sala VARCHAR(10)
+
+);
+drop table salas;
+
+ALTER TABLE salas
+ADD constraint idSala
+PRIMARY KEY (Andar, numero, Bloco, tipo_sala, capacidade);
+
+
+
+CREATE TABLE Emprestimo(
+	id_emprestimo Decimal(30) PRIMARY KEY,
+	Data_emprestimo DATE,
+	Data_devolucao DATE
+);
+explain analyse
+SELECT id_emprestimo from emprestimo where data_emprestimo  = '24/9/2021'
+
+CREATE UNIQUE INDEX IdxEmprestimo_data ON emprestimo (id_emprestimo);
+
+
+CREATE TABLE Material(
+	Cod DECIMAL(8) PRIMARY KEY,
+	Setor VARCHAR(5),
+	Danificado boolean
+	
+);
+explain analyze
+
+
+create table empresta(
+	
+	ID decimal(8) not null,
+	cod_emprestimo numeric(30) not NULL,
+	cod_material numeric(15),
+	constraint id_emprestimo primary key (cod_emprestimo),
+	constraint Ra foreign key (id) references usuario,
+	constraint Cod foreign key (cod_material) references material
+
+);
+
+CREATE OR REPLACE FUNCTION showEmprestimoUser(RA1 decimal(8))
+	returns table (nome varchar(100), RA Decimal(8), id_emprestimo Decimal(30),
+	Data_emprestimo DATE, codMaterial Decimal(30))
+	as $$
+BEGIN
+	RETURN QUERY SELECT c.nome, c.RA,
+	p.cod_emprestimo, v.Data_emprestimo, a.cod 
+	FROM usuario as c
+	JOIN empresta as p ON p.id = c.RA
+	JOIN emprestimo as v ON v.id_emprestimo = p.cod_emprestimo
+	JOIN material as a ON
+	a.cod=p.cod_material
+	WHERE c.Ra = RA1;
+END;
+$$ LANGUAGE plpgsql;
+
+select * from showEmprestimoUser('5299051');
+
+ table empresta;
+explain analyze
+SELECT cod_emprestimo from empresta
+where ID = 5299051;
+
+
+
+
+
+
+
+
+CREATE OR REPLACE FUNCTION showMaterialUser(NroMaterial decimal(8))
+	returns table (nome varchar(100), RA Decimal(8), Data_emprestimo DATE,  
+				   id_emprestimo Decimal(30))
+	as $$
+BEGIN
+	RETURN QUERY SELECT c.nome, c.RA,
+	v.data_emprestimo, v.id_emprestimo
+	FROM material as a
+	JOIN empresta as p ON p.cod_material = a.cod
+	JOIN usuario c ON c.Ra = p.ID
+	JOIN emprestimo as v ON v.id_emprestimo = p.cod_emprestimo
+	WHERE a.cod = NroMaterial;
+END;
+$$ LANGUAGE plpgsql;
+
+select * from showMaterialUser('118221683');
+
+
+
+DROP FUNCTION materialsetor
+CREATE OR REPLACE FUNCTION MaterialSetor(SetorN varchar(15), data date)
+	returns table (setor1 varchar(100), material decimal(100),data1 date )
+	as $$
+BEGIN
+	RETURN QUERY SELECT a.setor,a.cod, v.data_emprestimo
+	FROM material as a 
+	JOIN emprestimo as v ON v.data_emprestimo = data
+	WHERE a.Setor = SetorN;
+END;
+$$ LANGUAGE plpgsql;
+
+select * from MaterialSetor('Support', '2021-09-05');
+
+
+table emprestimo;
+table material;
+
+table empresta;
+table material;
+CREATE UNIQUE INDEX IdxemprestaUser ON empresta (Id, cod_emprestimo, cod_material);
+
+drop index IdxemprestaUser;
+Select 
+explain analyse
+SELECT cod_emprestimo from empresta
+where ID = 5299051;
+
+
+
+
+
+
+create table reserva(
+	Id_dia numeric(20) not null,
+	ra_aluno DECIMAL(8) NOT NULL,
+	diaDaSemana varchar(3),
+	dataReserva DATE, 
+	numero_sala integer,
+	RASala integer NOT NULL,
+	
+	constraint id_dia primary key (Id_dia),
+	constraint RA foreign key (ra_aluno) references usuario,
+	constraint dias_da_semana foreign key (diaDaSemana) references dia,
+	constraint idSala foreign key (Rasala) references salas
+	
+
+);
+
+table empresta;
+alter table empresta add cod_material decimal(20);
+
+
+select * from usuario where RA = 4106041;
+
+table usuario;
+alter table material add Cod Decimal(15) Primary key;
+
+alter table emprestimo add  primary key;
+table emprestimo;
+
+
+COPY Salas
+FROM 'C:\Users\crist\Desktop\Banco de dados 2\salas.csv'
+DELIMITER ','
+CSV HEADER;
+
+table salas;
+
+table material;
+COPY Material
+FROM 'C:\Users\crist\Desktop\Banco de dados 2\material.csv'
+DELIMITER ','
+CSV HEADER;
+
+
+table usuario;
+COPY usuario
+FROM 'C:\Users\crist\Desktop\Banco de dados 2\usuario.csv'
+DELIMITER ','
+CSV HEADER;
+
+table emprestimo;
+COPY emprestimo
+FROM 'C:\Users\crist\Desktop\Banco de dados 2\emprestimo.csv'
+DELIMITER ','
+CSV HEADER;
+
+
+table empresta;
+COPY empresta
+FROM 'C:\Users\crist\Desktop\Banco de dados 2\empresta.txt'
+DELIMITER ','
+CSV HEADER;
+
+
+table dia;
+COPY dia
+FROM 'C:\Users\crist\Desktop\Banco de dados 2\dias_da_semana.csv'
+DELIMITER ','
+CSV HEADER;
+
+table Tabela_horario
+COPY  Tabela_horario
+FROM 'C:\Users\crist\Desktop\Banco de dados 2\horarios.csv'
+DELIMITER ','
+CSV HEADER;
+
+table usuario;
+
+
+select cod_material, data_emprestimo 
+from empresta join emprestimo 
+on emprestimo.id_emprestimo = empresta.cod_emprestimo
+where cod_material = 636294123;
+
+CREATE UNIQUE INDEX Idxdata ON empresta (id,cod_emprestimo, cod_material);
+
+table emprestimo;
+
+SELECT nome from usuario on where id = 5299051
+
+
+create view usuarios_administrador as 
+select nome, Ra, tipo
+from  usuario where tipo = true
+order by nome desc;
+
+
+
+select * from usuarios_administrador
+
+
+
+
+
+create view usuarios_comum as 
+select nome, Ra, tipo
+from  usuario where tipo = false
+order by nome asc;
+
+select * from usuarios_comum
+
+
+CREATE OR REPLACE FUNCTION verificaNome()
+RETURNS trigger AS $nome$
+BEGIN
+	IF
+	NEW.nome~'^[a-zA-Zàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñ
+				çčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð''-]+$'
+	THEN
+		RETURN NEW;
+	END IF;
+	RAISE EXCEPTION 'O nome não pode possuir caracteres especiais ';
+END;
+$nome$ LANGUAGE plpgsql;
+CREATE TRIGGER verificaUsuario
+BEFORE INSERT OR UPDATE ON usuario
+FOR EACH ROW EXECUTE PROCEDURE verificaNome();
+
+drop trigger verificaUsuario
+table usuario
+
+update usuario
+set nome = 'CRîSTîANØ kØXNE'
+where ra='4411261';
+
+select * from usuario where  ra='4411261';
+
+
+
+CREATE OR REPLACE FUNCTION verificaMaterialEmprestado()
+RETURNS trigger AS $verifEmpres$
+	DECLARE
+	emprestimo1 emprestimo%ROWTYPE;
+BEGIN
+
+	SELECT * FROM emprestimo WHERE NEW.data_emprestimo = emprestimo.data_emprestimo INTO
+emprestimo1;
+
+
+	IF(emprestimo1.data_emprestimo = new.data_emprestimo) 
+		THEN 
+		RAISE EXCEPTION 'Esta material não pode ser escolhido, pois já esta emprestado!';
+	end If;
+END;
+$verifEmpres$ LANGUAGE plpgsql;
+
+CREATE TRIGGER verifica_empresta
+BEFORE INSERT OR UPDATE ON emprestimo
+FOR EACH ROW EXECUTE PROCEDURE verificaMaterialEmprestado();
+
+update emprestimo
+set id_emprestimo = '3554003730600242'
+where data_emprestimo ='2021-07-13';
+
+
+table emprestimo
